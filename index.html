@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurador AA One</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #F4F4F9;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2.section-title {
+            font-size: 1.5rem;
+            color: #6A1B9A;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #CCC;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: #333;
+        }
+        input:focus, select:focus {
+            border-color: #FF8C00;
+            outline: none;
+        }
+        button {
+            background-color: #6A1B9A;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #4B0082;
+        }
+        .gravar {
+            background-color: #FF8C00;
+        }
+        .cancelar {
+            background-color: transparent;
+            color: #FF8C00;
+            border: 2px solid #FF8C00;
+        }
+        .cancelar:hover {
+            background-color: #FF8C00;
+            color: white;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #CCC;
+            border-radius: 5px;
+            resize: none;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .checkbox-container label {
+            font-size: 1rem;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            display: none;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #CCC;
+            border-radius: 20px;
+            transition: 0.4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #6A1B9A;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="section-title">Configurações do Sistema</h2>
+
+        <!-- Botão para carregar configurações -->
+        <button onclick="loadConfig()">Carregar Configurações Atuais</button>
+
+        <!-- Campos -->
+        <label for="url">Informe o IP (url):</label>
+        <input type="text" id="url" placeholder="Exemplo: 192.168.41.41">
+
+        <label for="posId">POS ID:</label>
+        <input type="number" id="posId" placeholder="Digite o número do POS">
+
+        <label for="printerName">Nome da Impressora:</label>
+        <select id="printerName">
+            <option value="">Carregando impressoras...</option>
+        </select>
+
+        <label for="fiscalType">Tipo Fiscal (1 = NFCe, 2 = S@T, 3 = Ambos):</label>
+        <select id="fiscalType">
+            <option value="">Selecione</option>
+            <option value="1">NFCe</option>
+            <option value="2">S@T</option>
+            <option value="3">Ambos</option>
+        </select>
+
+        <label for="tpAmb">Tipo de Ambiente (1 = produção, 2 = homologação):</label>
+        <select id="tpAmb">
+            <option value="">Selecione</option>
+            <option value="1">Produção</option>
+            <option value="2">Homologação</option>
+        </select>
+
+        <label for="pinpadPort">Porta COM (Pinpad):</label>
+        <select id="pinpadPort">
+            <option value="">Selecione</option>
+            <script>
+                for (let i = 1; i <= 20; i++) {
+                    document.write(`<option value="COM${i}">COM${i}</option>`);
+                }
+            </script>
+        </select>
+
+        <label for="tefType">Tipo de TEF:</label>
+        <select id="tefType" onchange="toggleSitefFields()">
+            <option value="0">OFF</option>
+            <option value="1">SiTEF</option>
+            <option value="2">D-TEF</option>
+        </select>
+
+        <!-- Campos adicionais para SiTEF -->
+        <div id="sitefFields" class="hidden">
+            <label for="sitefServerAddress">Endereço do servidor SiTEF:</label>
+            <input type="text" id="sitefServerAddress" placeholder="Exemplo: 192.168.10.10">
+
+            <label for="sitefCompanyId">ID da Empresa SiTEF:</label>
+            <input type="text" id="sitefCompanyId" placeholder="Exemplo: 2">
+        </div>
+
+        <label for="layoutStyle">Layout (SHOP ou DRIVE):</label>
+        <select id="layoutStyle">
+            <option value="">Selecione</option>
+            <option value="SHOP">SHOP</option>
+            <option value="DRIVE">DRIVE</option>
+        </select>
+
+        <label for="optionToEat">Opção para Comer (V = Viagem, L = Comer aqui, Ambos):</label>
+        <select id="optionToEat">
+            <option value="">Ambos</option>
+            <option value="V">Viagem (V)</option>
+            <option value="L">Comer aqui (L)</option>
+        </select>
+
+        <!-- Novos campos em checkbox -->
+        <div class="checkbox-container">
+            <label for="showPagerPage">Habilitar o pager?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="showPagerPage">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="showFullValue">Mostrar o valor do mix?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="showFullValue">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="voOpcional">Ativar V.O. Opcional?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="voOpcional">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="disabledStartButton">Habilitar o botão Start?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="disabledStartButton" onchange="toggleBannerAndStart()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="disabledReShop">Desativar Reshop?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="disabledReShop">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="showFidelityPage">Ativar Tela Fidelidade?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="showFidelityPage">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="showPrismaPage">Ativar receba na Mesa/Pager?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="showPrismaPage">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-container">
+            <label for="localConfigOverridesOnline">Utilizar as configurações locais?</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="localConfigOverridesOnline">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Botões -->
+        <button class="gerar" onclick="generateJson()">Gerar JSON</button>
+
+        <textarea id="jsonOutput" readonly></textarea>
+
+        <button class="gravar" onclick="saveJson()">Confirmar</button>
+        <button class="cancelar" onclick="clearAll()">Cancelar</button>
+
+    </div>
+
+    <script>
+        const fs = require('fs');
+        const path = require('path');
+        const { exec } = require('child_process');
+
+        let jsonGenerated = false;
+        let configState = ''; // Para verificar se houve alteração após gerar o JSON
+
+        function toggleSitefFields() {
+            const tefType = document.getElementById('tefType').value;
+            const sitefFields = document.getElementById('sitefFields');
+
+            if (tefType == 1) {
+                sitefFields.classList.remove('hidden');
+            } else {
+                sitefFields.classList.add('hidden');
+            }
+        }
+
+        function toggleBannerAndStart() {
+            const disabledStartButton = document.getElementById('disabledStartButton').checked;
+            if (disabledStartButton) {
+                document.getElementById('showBannerHeaderAndBottom').value = 'false';
+            } else {
+                document.getElementById('showBannerHeaderAndBottom').value = 'true';
+            }
+        }
+
+        function generateJson() {
+            const config = {
+                "_available_urls": {
+                    "local_app": "http://localhost:3000",
+                    "contingencyRemoteUrl": "http://localhost:9040/poshub"
+                },
+                "debug": true,
+                "url": `http://${document.getElementById('url').value}:8080`,
+                "posId": parseInt(document.getElementById('posId').value),
+                "posType": 2,
+                "retailerId": "38ae45ed-3bcc-8770-fd1c-b1cdabc920bf",
+                "contingencyRemoteUrl": "",
+                "printer": {
+                    "_printerNameExamples": "SWEDA SI-300S;SWEDA SI-300L;EPSON TM-T20 Receipt5;Microsoft Print to PDF",
+                    "name": document.getElementById('printerName').value,
+                    "port": "COM5",
+                    "drawerEnabled": false,
+                    "drawerCommand": [27, 112, 0, 150, 255],
+                    "listPrintersAvailable": false
+                },
+                "danfe": {
+                    "_comment_fiscalType": "fiscalType 1: NFCe, 2: SAT",
+                    "fiscalType": parseInt(document.getElementById('fiscalType').value),
+                    "tpAmb": parseInt(document.getElementById('tpAmb').value),
+                    "MIDeUrl": "http://localhost:8089",
+                    "sat": {
+                        "roundCalculations": true,
+                        "cnpjHomolog": "53485215000106",
+                        "url": "http://localhost:8089"
+                    }
+                },
+                "tef": {
+                    "type": parseInt(document.getElementById('tefType').value),
+                    "pinpadPort": document.getElementById('pinpadPort').value,
+                    "hasPinpad": true,
+                    "dtefWorkingFolder": "C:\\DPOS8\\Cupons",
+                    "ignoreCouponSecondPage": true,
+                    "sendWarningsToFront": true,
+                    "dontCancelConfirmPendingsOnRecovery": true
+                },
+                "log": {
+                    "level": "info"
+                },
+                "window": {
+                    "kiosk": true
+                },
+                "enableStateLog": 0,
+                "farmaciaPopularEnabled": false,
+                "testConnection": false,
+                "REACT_APP_TERMINALID": parseInt(document.getElementById('posId').value),
+                "REACT_APP_BFF_ENDPOINT": `http://${document.getElementById('url').value}:3334`,
+                "REACT_APP_API_ENDPOINT_PRODUCTSALL": `http://${document.getElementById('url').value}:3333`,
+                "REACT_APP_RESHOP_ENDPOINT": "https://reshopfood.linx.com.br",
+                "REACT_APP_LAYOUT_STYLE": document.getElementById('layoutStyle').value,
+                "REACT_APP_PISTA_DRIVE": 1,
+                "REACT_APP_VAGA_DRIVE": 1,
+                "SHOW_OPTIONTOEAT_PAGE": document.getElementById('optionToEat').value
+            };
+
+            // Incluir campos apenas se os checkboxes estiverem marcados
+            if (document.getElementById('showPagerPage').checked) {
+                config.SHOW_PAGER_PAGE = true;
+            }
+            if (document.getElementById('showFullValue').checked) {
+                config.SHOW_FULL_VALUE = true;
+            }
+            if (document.getElementById('voOpcional').checked) {
+                config.VO_OPCIONAL = "1";
+            }
+            if (document.getElementById('disabledStartButton').checked) {
+                config.DISABLED_START_BUTTON = false;
+                config.SHOW_BANNER_HEADER_AND_BOTTOM = true;
+            } else {
+                config.DISABLED_START_BUTTON = true;
+                config.SHOW_BANNER_HEADER_AND_BOTTOM = false;
+            }
+            if (document.getElementById('disabledReShop').checked) {
+                config.DISABLED_RE_SHOP = true;
+            }
+            if (document.getElementById('showFidelityPage').checked) {
+                config.SHOW_FIDELITY_PAGE = true;
+            }
+            if (document.getElementById('localConfigOverridesOnline').checked) {
+                config.LOCAL_CONFIG_OVERRIDES_ONLINE = true;
+            }
+            config.SHOW_PRISMA_PAGE = document.getElementById('showPrismaPage').checked ? true : false;
+
+            // Adiciona os campos SiTEF ao JSON se o tipo de TEF for SiTEF
+            if (parseInt(document.getElementById('tefType').value) === 1) {
+                config.tef.sitefServerAddress = document.getElementById('sitefServerAddress').value;
+                config.tef.sitefCompanyId = document.getElementById('sitefCompanyId').value;
+            }
+
+            // Exibir o JSON gerado
+            const jsonString = JSON.stringify(config, null, 2);
+            document.getElementById('jsonOutput').value = jsonString;
+            configState = jsonString;
+            jsonGenerated = true;
+        }
+
+        function saveJson() {
+            if (!jsonGenerated || document.getElementById('jsonOutput').value !== configState) {
+                alert("Necessário primeiro gerar ou atualizar o JSON.");
+                return;
+            }
+
+            const jsonContent = document.getElementById('jsonOutput').value;
+            const filePath = path.join('C:', 'AutoAtendimentoOne', 'pdv_cloud', 'config.json');
+            fs.writeFile(filePath, jsonContent, (err) => {
+                if (err) {
+                    alert('Erro ao salvar o arquivo');
+                } else {
+                    alert('Arquivo salvo com sucesso!');
+                }
+            });
+        }
+
+        // Função para listar impressoras instaladas usando WMIC
+        function listPrinters() {
+            const printerSelect = document.getElementById('printerName');
+            printerSelect.innerHTML = '<option value="">Carregando impressoras...</option>';
+            
+            exec('wmic printer get name', (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`Erro ao listar impressoras: ${err}`);
+                    printerSelect.innerHTML = '<option value="">Erro ao carregar impressoras</option>';
+                    return;
+                }
+
+                const printers = stdout.split('\n').filter((name, index) => index > 0 && name.trim() !== '');
+                printerSelect.innerHTML = ''; // Limpa o campo de seleção
+
+                printers.forEach(printer => {
+                    const option = document.createElement('option');
+                    option.value = printer.trim();
+                    option.textContent = printer.trim();
+                    printerSelect.appendChild(option);
+                });
+            });
+        }
+
+        // Função para carregar as configurações atuais do arquivo config.json
+        function loadConfig() {
+    const filePath = path.join('C:', 'AutoAtendimentoOne', 'pdv_cloud', 'config.json');
+    
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            alert('Erro ao carregar o arquivo de configuração');
+            return;
+        }
+
+        const config = JSON.parse(data);
+
+        // Extração apenas do IP, removendo http:// ou https://
+        const url = config.url || '';
+        const ip = new URL(url).hostname; // Extrai o hostname (IP)
+
+        // Preencher campos com as configurações existentes
+        document.getElementById('url').value = ip;
+        document.getElementById('posId').value = config.posId || '';
+        document.getElementById('printerName').value = config.printer.name || '';
+        document.getElementById('fiscalType').value = config.danfe.fiscalType || '';
+        document.getElementById('tpAmb').value = config.danfe.tpAmb || '';
+        document.getElementById('pinpadPort').value = config.tef.pinpadPort || '';
+        document.getElementById('tefType').value = config.tef.type || '0';
+
+        if (config.tef.type == 1) {
+            document.getElementById('sitefFields').classList.remove('hidden');
+            document.getElementById('sitefServerAddress').value = config.tef.sitefServerAddress || '';
+            document.getElementById('sitefCompanyId').value = config.tef.sitefCompanyId || '';
+        }
+
+        document.getElementById('layoutStyle').value = config.REACT_APP_LAYOUT_STYLE || '';
+        document.getElementById('optionToEat').value = config.SHOW_OPTIONTOEAT_PAGE || 'Ambos';
+        document.getElementById('showPagerPage').checked = config.SHOW_PAGER_PAGE || false;
+        document.getElementById('showFullValue').checked = config.SHOW_FULL_VALUE || false;
+        document.getElementById('voOpcional').checked = config.VO_OPCIONAL == "1";
+        document.getElementById('disabledStartButton').checked = !config.DISABLED_START_BUTTON;
+        document.getElementById('disabledReShop').checked = config.DISABLED_RE_SHOP || false;
+        document.getElementById('showFidelityPage').checked = config.SHOW_FIDELITY_PAGE || false;
+        document.getElementById('showPrismaPage').checked = config.SHOW_PRISMA_PAGE || false;
+        document.getElementById('localConfigOverridesOnline').checked = config.LOCAL_CONFIG_OVERRIDES_ONLINE || false;
+    });
+}
+
+
+        // Função para limpar todos os campos e resetar o JSON
+        function clearAll() {
+            document.getElementById('url').value = '';
+            document.getElementById('posId').value = '';
+            document.getElementById('printerName').value = '';
+            document.getElementById('fiscalType').value = '';
+            document.getElementById('tpAmb').value = '';
+            document.getElementById('pinpadPort').value = '';
+            document.getElementById('tefType').value = '0';
+            document.getElementById('sitefFields').classList.add('hidden');
+            document.getElementById('sitefServerAddress').value = '';
+            document.getElementById('sitefCompanyId').value = '';
+            document.getElementById('layoutStyle').value = '';
+            document.getElementById('optionToEat').value = 'Ambos';
+            document.getElementById('showPagerPage').checked = false;
+            document.getElementById('showFullValue').checked = false;
+            document.getElementById('voOpcional').checked = false;
+            document.getElementById('disabledStartButton').checked = false;
+            document.getElementById('disabledReShop').checked = false;
+            document.getElementById('showFidelityPage').checked = false;
+            document.getElementById('showPrismaPage').checked = false;
+            document.getElementById('localConfigOverridesOnline').checked = false;
+            document.getElementById('jsonOutput').value = '';
+        }
+
+        // Executa a função para listar impressoras ao carregar a página
+        window.onload = listPrinters;
+    </script>
+
+</body>
+</html>

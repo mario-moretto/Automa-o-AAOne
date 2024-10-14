@@ -1,0 +1,14 @@
+-Rodar o Projeto Electron
+Agora que tudo está configurado, vamos iniciar a aplicação.
+
+No terminal, dentro da pasta do projeto, execute:
+
+npm start
+
+
+
+
+-Empacotar a Aplicação
+Agora, execute o seguinte comando no terminal para empacotar a aplicação:
+
+electron-packager . ConfiguradorAA --platform=win32 --arch=x64 --icon=icon.ico --out=release --overwrite
